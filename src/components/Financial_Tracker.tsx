@@ -282,7 +282,7 @@ export default function App() {
         ))}
       </div>
 
-{/* Nav */}
+      {/* Nav */}
       <div style={{display:"flex",gap:2,padding:"14px 20px 0",borderBottom:"1px solid #1e293b",overflowX:"auto"}}>
         {TABS.map(n=>(
           <button key={n.id} onClick={()=>setTab(n.id)} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",borderRadius:"8px 8px 0 0",border:"none",cursor:"pointer",fontSize:12,fontWeight:500,whiteSpace:"nowrap",background:tab===n.id?"linear-gradient(135deg,#6366f1,#4f46e5)":"transparent",color:tab===n.id?"#fff":"#64748b"}}>
@@ -509,7 +509,137 @@ export default function App() {
                           ))}
                         </div>
                         <div style={{display:"flex",gap:10,marginTop:10}}>
-                          <
+                          <div style={{background:"#10b98111",border:"1px solid #10b98133",borderRadius:8,padding:"7px 14px"}}><div style={{fontSize:10,color:"#10b981"}}>Maturity Value</div><div style={{fontSize:15,fontWeight:700,color:"#10b981"}}>{fmtRM(mat)}</div></div>
+                          <div style={{background:"#6366f111",border:"1px solid #6366f133",borderRadius:8,padding:"7px 14px"}}><div style={{fontSize:10,color:"#a78bfa"}}>Interest Earned</div><div style={{fontSize:15,fontWeight:700,color:"#a78bfa"}}>{fmtRM(mat-parseFloat(f.principal))}</div></div>
+                        </div>
+                      </div>
+                      <button onClick={()=>setFds(p=>p.filter(x=>x.id!==f.id))} style={{background:"none",border:"none",cursor:"pointer",color:"#334155",padding:4,marginLeft:10}}><Trash2 size={15}/></button>
+                    </div>
+                  </div>
+                );})}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── INVESTMENT ── */}
+        {tab==="investment"&&(
+          <div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+              <div>
+                <div style={{fontSize:16,fontWeight:700,color:"#f1f5f9"}}>Investment Portfolio</div>
+                <div style={{fontSize:12,color:"#475569"}}>Live prices · Auto-refreshes every hour {lastInvUpdate&&`· Last: ${fmtTime(lastInvUpdate)}`}</div>
+              </div>
+              <div style={{display:"flex",gap:8}}>
+                <button onClick={()=>{fetchSectorAnalysis();fetchLiveQuotes();}} disabled={sectorLoading||quotesLoading} style={{background:"#1e293b",border:"1px solid #334155",borderRadius:8,padding:"7px 12px",color:"#94a3b8",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:5}}>
+                  <RefreshCw size={13} style={{animation:(sectorLoading||quotesLoading)?"spin 1s linear infinite":"none"}}/>Refresh
+                </button>
+                <button onClick={()=>setShowInvForm(v=>!v)} style={{background:"linear-gradient(135deg,#f59e0b,#d97706)",border:"none",borderRadius:8,padding:"8px 14px",color:"#fff",fontSize:12,cursor:"pointer",display:"flex",alignItems:"center",gap:5,fontWeight:500}}>
+                  {showInvForm?<X size={13}/>:<Plus size={13}/>}{showInvForm?"Cancel":"Add Holding"}
+                </button>
+              </div>
+            </div>
+            {showInvForm&&(
+              <div style={{background:"#111827",border:"1px solid #f59e0b33",borderRadius:12,padding:18,marginBottom:14}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                  <div>{sLabel("TICKER / NAME")}<input {...inp(invForm.name,v=>setInvForm(f=>({...f,name:v})),{placeholder:"e.g. MAYBANK / NVDA / BTC"})}/></div>
+                  <div>{sLabel("TYPE")}<select value={invForm.type} onChange={e=>setInvForm(f=>({...f,type:e.target.value}))} style={{width:"100%",background:"#0f172a",border:"1px solid #1e293b",borderRadius:6,padding:"8px 10px",color:"#e2e8f0",fontSize:13}}>{INV_TYPES.map(c=><option key={c}>{c}</option>)}</select></div>
+                  <div>{sLabel("SECTOR")}<select value={invForm.sector} onChange={e=>setInvForm(f=>({...f,sector:e.target.value}))} style={{width:"100%",background:"#0f172a",border:"1px solid #1e293b",borderRadius:6,padding:"8px 10px",color:"#e2e8f0",fontSize:13}}>{INV_SECTORS.map(c=><option key={c}>{c}</option>)}</select></div>
+                  <div>{sLabel("UNITS")}<input type="number" {...inp(invForm.units,v=>setInvForm(f=>({...f,units:v})),{placeholder:"100"})}/></div>
+                  <div>{sLabel("BUY PRICE (RM)")}<input type="number" {...inp(invForm.buyPrice,v=>setInvForm(f=>({...f,buyPrice:v})),{placeholder:"1.50"})}/></div>
+                  <div>{sLabel("CURRENT PRICE (optional)")}<input type="number" {...inp(invForm.currentPrice,v=>setInvForm(f=>({...f,currentPrice:v})),{placeholder:"Auto-fetched"})}/></div>
+                  <div>{sLabel("DATE BOUGHT")}<input type="date" {...inp(invForm.date,v=>setInvForm(f=>({...f,date:v})))}/></div>
+                  <div style={{display:"flex",alignItems:"flex-end"}}><button onClick={addInv} style={{width:"100%",background:"linear-gradient(135deg,#f59e0b,#d97706)",border:"none",borderRadius:6,padding:"9px",color:"#fff",fontSize:13,cursor:"pointer",fontWeight:600}}>Save Holding</button></div>
+                </div>
+              </div>
+            )}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:14}}>
+              {[{l:"Total Invested",v:fmtRM(totalInvCost),c:"#64748b"},{l:"Market Value",v:fmtRM(totalInvValue),c:"#22d3ee"},{l:"Total P&L",v:fmtRM(invPnL),c:invPnL>=0?"#10b981":"#f43f5e"},{l:"Return",v:`${totalInvCost>0?((invPnL/totalInvCost)*100).toFixed(2):0}%`,c:invPnL>=0?"#10b981":"#f43f5e"}].map((s,i)=>(
+                <div key={i} style={{background:"#111827",border:`1px solid ${s.c}33`,borderRadius:10,padding:"12px 14px"}}><div style={{fontSize:10,color:s.c,marginBottom:4}}>{s.l}</div><div style={{fontSize:15,fontWeight:700,color:"#f1f5f9"}}>{s.v}</div></div>
+              ))}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+              <Card>
+                <div style={{fontSize:12,fontWeight:600,color:"#94a3b8",marginBottom:10}}>Sector Allocation</div>
+                {sectorInvData.length>0?<ResponsiveContainer width="100%" height={180}><PieChart><Pie data={sectorInvData} cx="50%" cy="50%" outerRadius={70} dataKey="value" label={({name,percent})=>`${name} ${(percent*100).toFixed(0)}%`} labelLine={false} fontSize={10}>{sectorInvData.map((_,i)=><Cell key={i} fill={COLORS[i%COLORS.length]}/>)}</Pie><Tooltip formatter={v=>fmtRM(v)} contentStyle={ttStyle}/></PieChart></ResponsiveContainer>
+                :<div style={{height:180,display:"flex",alignItems:"center",justifyContent:"center",color:"#334155",fontSize:12}}>No investments</div>}
+              </Card>
+              <Card>
+                <div style={{fontSize:12,fontWeight:600,color:"#94a3b8",marginBottom:10}}>Holdings by Type</div>
+                {investments.length>0?(()=>{ const m={}; investments.forEach(i=>{const v=parseFloat(i.currentPrice||0)*parseFloat(i.units||0); m[i.type]=(m[i.type]||0)+v;}); return <ResponsiveContainer width="100%" height={180}><BarChart data={Object.entries(m).map(([name,value])=>({name,value}))} barSize={20}><CartesianGrid strokeDasharray="3 3" stroke="#1e293b"/><XAxis dataKey="name" tick={{fill:"#475569",fontSize:10}}/><YAxis tick={{fill:"#475569",fontSize:10}} tickFormatter={v=>`RM${v>=1000?(v/1000).toFixed(0)+"k":v}`}/><Tooltip formatter={v=>fmtRM(v)} contentStyle={ttStyle}/><Bar dataKey="value" fill="#f59e0b" radius={[4,4,0,0]}/></BarChart></ResponsiveContainer>; })()
+                :<div style={{height:180,display:"flex",alignItems:"center",justifyContent:"center",color:"#334155",fontSize:12}}>No investments</div>}
+              </Card>
+            </div>
+            <Card style={{marginBottom:14}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{fontSize:12,fontWeight:600,color:"#94a3b8"}}>Live Holdings ({investments.length})</div>
+                {quotesLoading&&<div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"#475569"}}><Spinner/>Fetching live prices…</div>}
+              </div>
+              {!investments.length?<div style={{textAlign:"center",color:"#334155",fontSize:12,padding:30}}>No holdings added yet</div>:(
+                investments.map(inv=>{
+                  const ticker=inv.name.toUpperCase();
+                  const liveQ=liveQuotes[ticker];
+                  const price=liveQ?.price||parseFloat(inv.currentPrice||0);
+                  const cost=parseFloat(inv.buyPrice||0)*parseFloat(inv.units||0);
+                  const val=price*parseFloat(inv.units||0);
+                  const pnl=val-cost; const pct=cost>0?(pnl/cost*100).toFixed(1):0;
+                  return(
+                    <div key={inv.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 4px",borderBottom:"1px solid #0f172a"}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
+                        <div style={{width:36,height:36,borderRadius:8,background:"#f59e0b22",display:"flex",alignItems:"center",justifyContent:"center",color:"#f59e0b",fontSize:11,fontWeight:700}}>{inv.name.slice(0,3).toUpperCase()}</div>
+                        <div>
+                          <div style={{fontSize:13,fontWeight:600,color:"#e2e8f0"}}>{inv.name} <span style={{fontSize:10,color:"#475569",fontWeight:400}}>{inv.type}</span></div>
+                          <div style={{fontSize:10,color:"#475569"}}>{inv.sector} · {inv.units} units @ RM{inv.buyPrice}
+                            {liveQ&&<span style={{color:"#22d3ee",marginLeft:6}}>● Live RM{Number(liveQ.price).toFixed(3)}</span>}
+                          </div>
+                        </div>
+                      </div>
+                      <div style={{display:"flex",alignItems:"center",gap:16}}>
+                        <div style={{textAlign:"right"}}>
+                          <div style={{fontSize:12,fontWeight:600,color:"#e2e8f0"}}>{fmtRM(val)}</div>
+                          <div style={{fontSize:11,color:pnl>=0?"#10b981":"#f43f5e",display:"flex",alignItems:"center",gap:3,justifyContent:"flex-end"}}>
+                            {pnl>=0?<ArrowUpRight size={11}/>:<ArrowDownRight size={11}/>}{pnl>=0?"+":""}{fmtRM(pnl)} ({pct}%)
+                          </div>
+                        </div>
+                        <button onClick={()=>setInvestments(p=>p.filter(x=>x.id!==inv.id))} style={{background:"none",border:"none",cursor:"pointer",color:"#334155",padding:2}}><Trash2 size={13}/></button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </Card>
+            {/* Live Sector Analysis */}
+            <div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{fontSize:14,fontWeight:700,color:"#f1f5f9"}}>📊 Live Sector Analysis</div>
+                {sectorLoading&&<div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"#475569"}}><Spinner/>Updating…</div>}
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                {(sectorAnalysis.length?sectorAnalysis:SECTOR_META).map((s,i)=>{
+                  const meta=SECTOR_META.find(x=>x.sector===s.sector)||SECTOR_META[i%SECTOR_META.length];
+                  return(
+                    <div key={i} style={{background:"#111827",border:`1px solid ${meta.color}33`,borderRadius:12,padding:16}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                        <div style={{display:"flex",alignItems:"center",gap:8}}>
+                          <span style={{fontSize:20}}>{meta.icon}</span>
+                          <div><div style={{fontSize:13,fontWeight:700,color:"#f1f5f9"}}>{s.sector}</div><div style={{fontSize:10,color:"#475569"}}>Risk: {meta.risk}</div></div>
+                        </div>
+                        {s.change!==undefined&&(
+                          <div style={{textAlign:"right"}}>
+                            <div style={{fontSize:13,fontWeight:700,color:s.trend==="up"?"#10b981":s.trend==="down"?"#f43f5e":"#f59e0b"}}>{s.trend==="up"?"↑":s.trend==="down"?"↓":"→"} {s.change>0?"+":""}{s.change}%</div>
+                            <div style={{fontSize:10,background:`${meta.color}22`,color:meta.color,padding:"1px 8px",borderRadius:4,marginTop:2}}>{s.rating||"—"}</div>
+                          </div>
+                        )}
+                      </div>
+                      {s.desc&&<div style={{fontSize:11,color:"#94a3b8",marginBottom:8,lineHeight:1.5}}>{s.desc}</div>}
+                      {s.picks&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{s.picks.map(p=><span key={p} style={{background:"#0f172a",border:"1px solid #1e293b",borderRadius:4,padding:"2px 8px",fontSize:10,color:"#64748b"}}>{p}</span>)}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── MARKET PULSE ── */}
         {tab==="news"&&(
